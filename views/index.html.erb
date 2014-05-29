@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+
+<ol>
+  <% @articles.each do |article| %>
+    <li><%= article["title"] %> --- <%= article["url"] %></li>
+    <li><%= article["description"] %> Posted by: <%= article["user"] %></li>
+  <% end %>
+
+</ol>
