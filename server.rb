@@ -1,6 +1,35 @@
 require 'pry'
 require 'sinatra'
 require 'pg'
+require 'net/http'
+require 'uri'
+
+def validate_no_blanks
+  fields = [ params["title"], params["url"], params["desc"] ]
+  !fields.any? {|field| field == "" || field == nil}
+end
+
+def validate_comment_not_blank
+  true if params["body"] != nil || params["body"] != ""
+end
+
+def validate_desc_length
+  params["desc"].length < 20 ? false : true
+end
+
+def validate_unique_url(articles)
+  false unless articles.each { |article| article["url"] != params["url"] }
+end
+
+def validate_good_url
+  if params["url"].start_with?("http://") || params["url"].start_with?("https://")
+    address = URI(params["url"])
+    response = Net::HTTP.get_response(address)
+    false unless response.code == 200
+  else
+    false
+  end
+end
 
 def access_database
   begin
@@ -53,11 +82,19 @@ get '/submit' do
 end
 
 post '/submit' do
-  params["user_id"] ||= 1
-  access_database do |conn|
-    conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
+  @articles = access_database{ |conn| conn.exec(find_articles) }
+  @title = params["title"]
+  @url = params["url"]
+  @desc = params["desc"]
+
+  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles)
+    access_database do |conn|
+      conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
+    end
+    redirect '/articles'
+  else
+    redirect '/submit'
   end
-  redirect '/articles'
 end
 
 get '/articles/:id/comments' do
@@ -71,8 +108,11 @@ end
 post '/articles/:id/comments' do
   @article_id = params[:id]
   @comment_body = params[:body]
-  access_database do |conn|
-    conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
+  
+  if validate_comment_not_blank
+    access_database do |conn|
+      conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
+    end
   end
-  redirect '/articles/:id/comments'
+  redirect "/articles/#{@article_id}/comments"
 end
