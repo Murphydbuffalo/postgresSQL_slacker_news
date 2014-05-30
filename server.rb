@@ -2,14 +2,13 @@ require 'pry'
 require 'sinatra'
 require 'pg'
 
-def save_article(article)
-
-
-
-
+def generate_sql
+  sql_statement = "INSERT INTO articles (title, url, description, user_id)
+                   VALUES ( $1, $2,
+                   $3, $4)"
 end
 
-def query_database
+def access_database
   begin
     connection = PG.connect(dbname: "slacker_news")
     yield(connection)
@@ -29,9 +28,7 @@ end
 
 
 get '/articles' do
-  @articles = query_database{ |conn| conn.exec(find_articles) }
-
-
+  @articles = access_database{ |conn| conn.exec(find_articles) }
   erb :'index.html'
 end
 
@@ -44,13 +41,16 @@ get '/articles/:id' do
   erb :'show.html'
 end
 
-get '/articles/new' do
-  erb :'new.html'
+get '/submit' do
+  erb :'submit.html'
 end
 
-post '/articles/new' do
-  save_article(params)
-  redirect '/articles/new'
+post '/submit' do
+  params["user_id"] ||= 1
+  access_database do |conn|
+    conn.exec_params(generate_sql, [ params["title"], params["url"], params["desc"], params["user_id"] ] )
+  end
+  redirect '/articles'
 end
 
 # get '/articles/:id/comments' do

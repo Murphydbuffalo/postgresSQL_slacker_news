@@ -1,0 +1,67 @@
+body {font: 80% Verdana;}
+
+.whole_page {background-color: #f6f6ef;
+             width: 85%;
+             margin: auto;}
+
+header {background-color: #ff6600;
+        height: 1.80em;
+        position: relative;}
+
+#login {margin-left: 40%;}
+
+header nav,
+header a {position: relative;
+          bottom: 40%;}
+
+
+header h4,
+header img {display: inline;}
+
+header h4,
+header a,
+header ul li {font-size: 1.1em;}
+
+header img {height: 1.4em;
+            width: 1.4em;
+            border: 1px solid white;
+            margin: 0 0 .5em .15em;}
+
+header nav ul {position: relative;
+             right: 11%;}
+
+header li a:visited {color: black;}
+
+nav,
+nav li {display: inline-block;}
+
+ol li  {font-size: 90%;}
+
+ol ul li {font-size: 75%;
+          padding-bottom: .4em;
+          position: relative;
+          right: 5%;}
+
+ol li,
+ol ul li,
+li a:visited {color: grey;}
+
+ul li {list-style-type: none;}
+
+a {text-decoration: none;
+   color: black;}
+
+.content li a {font-size: 120%;}
+
+.content li a:hover {text-decoration: underline;}
+
+span {font-size: 65%;}
+
+hr {border: .15em solid #ff6600;}
+
+footer {text-align: center;}
+
+footer form {color: grey;
+             font-size: 1.1em;}
+
+footer nav li {font-size: 80%;}

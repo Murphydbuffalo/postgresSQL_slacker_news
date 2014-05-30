@@ -1,0 +1,81 @@
+body {font: 80% Verdana;}
+
+.whole_page {background-color: #f6f6ef;
+             width: 85%;
+             margin: auto;}
+
+header {background-color: #ff6600;
+        height: 1.80em;
+        position: relative;}
+
+#login {margin-left: 40%;}
+
+header nav,
+header a {position: relative;
+          bottom: 40%;}
+
+
+header h4,
+header img {display: inline;}
+
+header h4,
+header a,
+header ul li {font-size: 1.1em;}
+
+header img {height: 1.4em;
+            width: 1.4em;
+            border: 1px solid white;
+            margin: 0 0 .5em .15em;}
+
+header nav ul {position: relative;
+               right: 4%;}
+
+header li a:visited {color: black;}
+
+nav,
+nav li {display: inline-block;}
+
+.heading {margin: 1em 0 -.5em .5em;
+          font-size: 90%;
+          color: grey;}
+
+.heading a {font-size: 115%;
+            color: black;}
+
+.subheading {font-size: 75%;
+             padding-bottom: .4em;
+             position: relative;
+             margin-left: 2em;}
+
+.subheading,
+li a:visited {color: grey;}
+
+.content a:hover {text-decoration: underline;}
+
+form {margin-left: 2.5%;}
+
+form textarea,
+form button {margin-bottom: 2.5%;}
+
+ul {margin-left: -1.5em;}
+
+ul li {list-style-type: none;
+       font-size: 90%;}
+
+a {text-decoration: none;
+   color: black;}
+
+span {font-size: 65%;}
+
+#error {color: red;
+        font-size: .8em;
+        padding-left: .5em;}
+
+hr {border: .15em solid #ff6600;}
+
+footer {text-align: center;}
+
+footer form {color: grey;
+             font-size: 1.1em;}
+
+footer nav li {font-size: 80%;}
