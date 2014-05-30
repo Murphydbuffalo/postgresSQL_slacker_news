@@ -78,6 +78,11 @@ get '/' do
 end
 
 get '/submit' do
+  @articles = access_database{ |conn| conn.exec(find_articles) }
+  @title = params["title"]
+  @url = params["url"]
+  @desc = params["desc"]
+
   erb :'submit.html'
 end
 
@@ -87,14 +92,14 @@ post '/submit' do
   @url = params["url"]
   @desc = params["desc"]
 
-  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles)
+  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles) && validate_good_url
     access_database do |conn|
       conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
     end
     redirect '/articles'
   else
-    redirect '/submit'
   end
+  erb :'submit.html'
 end
 
 get '/articles/:id/comments' do
