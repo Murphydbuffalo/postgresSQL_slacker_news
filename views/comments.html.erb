@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Slacker News</title>
     <link rel="shortcut icon" href="http://charles.io/images/yc.png">
-    <link rel="stylesheet" href="styles.css" type="text/css">
+    <link rel="stylesheet" href="/comment_styles.css" type="text/css">
   </head>
 
   <body>
@@ -25,19 +25,19 @@
       </header>
 
       <div class="content">
-        <ol>
-          <% @articles.each do |article| %>
-          <li> <span> &#x25b2; </span> <a href="<%= article["url"] %>" target="_blank"> <%= article["title"] %> </a>
-            <ul>
-             <li> <%= article["description"] %> <a href="/articles/<%= article["id"] %>/comments"> Comments </a></li>
-            </ul>
-          </li>
-          <% end %>
-        </ol>
+        <% @comments.each do |comment| %>
+          <p><%= comment["body"] %></p>
+        <% end %>
+        <form action="/articles/<%= @article_id %>/comments" method="post">
+          
+          <input type="text" name="body" id="body">
 
-        <ul>
-          <li> <a href=""> More </a> </li>
-        </ul>
+          <input type="submit" value="Post Comment">
+
+        </form>
+        
+        <p id="error"><%= @error_message %></p>
+      
       </div>
 
       <footer>

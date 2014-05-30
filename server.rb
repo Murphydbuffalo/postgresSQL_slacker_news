@@ -2,12 +2,6 @@ require 'pry'
 require 'sinatra'
 require 'pg'
 
-def generate_sql
-  sql_statement = "INSERT INTO articles (title, url, description, user_id)
-                   VALUES ( $1, $2,
-                   $3, $4)"
-end
-
 def access_database
   begin
     connection = PG.connect(dbname: "slacker_news")
@@ -17,15 +11,32 @@ def access_database
   end
 end
 
+def sql_insert_into_article
+  sql_statement = "INSERT INTO articles (title, url, description, posted_at)
+                   VALUES ( $1, $2, $3, $4)"
+end
+
+def sql_insert_into_comments
+  sql_statement = "INSERT INTO comments (body, posted_at, article_id)
+                   VALUES ( $1, $2, $3)"
+end
+
 def find_articles#(user_search)
   # search ||= user_search
   query = "SELECT
-           articles.title, articles.url, articles.description, users.name AS user
+           title, url, description, id 
            FROM articles
-           JOIN users ON users.id = articles.user_id"
+           ORDER BY id"
            # WHERE articles.title = #{search}
 end
 
+def find_comments
+  sql = "SELECT comments.body, comments.posted_at, comments.article_id
+         FROM comments
+         JOIN articles ON articles.id = comments.article_id
+         WHERE articles.id = $1
+         ORDER BY comments.posted_at"
+end
 
 get '/articles' do
   @articles = access_database{ |conn| conn.exec(find_articles) }
@@ -37,10 +48,6 @@ get '/' do
   redirect "/articles"
 end
 
-get '/articles/:id' do
-  erb :'show.html'
-end
-
 get '/submit' do
   erb :'submit.html'
 end
@@ -48,15 +55,24 @@ end
 post '/submit' do
   params["user_id"] ||= 1
   access_database do |conn|
-    conn.exec_params(generate_sql, [ params["title"], params["url"], params["desc"], params["user_id"] ] )
+    conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
   end
   redirect '/articles'
 end
 
-# get '/articles/:id/comments' do
-#   erb :'comments.html'
-# end
+get '/articles/:id/comments' do
+  @article_id = params[:id].to_i
+  @comments = access_database do |conn|
+    conn.exec_params(find_comments, [@article_id])
+  end
+  erb :'comments.html'
+end
 
-# post '/articles/:id/comments' do
-
-# end
+post '/articles/:id/comments' do
+  @article_id = params[:id]
+  @comment_body = params[:body]
+  access_database do |conn|
+    conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
+  end
+  redirect '/articles/:id/comments'
+end
