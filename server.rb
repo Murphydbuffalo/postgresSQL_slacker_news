@@ -58,6 +58,7 @@ def find_articles
   query = "SELECT
            title, url, description, id 
            FROM articles
+           WHERE title ILIKE $1 OR description ILIKE $1
            ORDER BY id"
 end
 
@@ -72,7 +73,8 @@ end
 ######################## ROUTING & CONTROLLER LOGIC #############################
 
 get '/articles' do
-  @articles = access_database{ |conn| conn.exec(find_articles) }
+  search ||= params[:search]
+  @articles = access_database{ |conn| conn.exec_params(find_articles, ["%#{search}%"]) }
   erb :'index.html'
 end
 
