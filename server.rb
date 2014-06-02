@@ -62,6 +62,13 @@ def find_articles
            ORDER BY id"
 end
 
+def find_all_articles
+  query = "SELECT
+           title, url, description, id 
+           FROM articles
+           ORDER BY id"
+end
+
 def find_comments
   sql = "SELECT comments.body, comments.posted_at, comments.article_id
          FROM comments
@@ -84,7 +91,7 @@ get '/' do
 end
 
 get '/submit' do
-  @articles = access_database{ |conn| conn.exec(find_articles) }
+  @articles = access_database{ |conn| conn.exec(find_all_articles) }
   @title = params["title"]
   @url = params["url"]
   @desc = params["desc"]
@@ -93,7 +100,7 @@ get '/submit' do
 end
 
 post '/submit' do
-  @articles = access_database{ |conn| conn.exec(find_articles) }
+  @articles = access_database{ |conn| conn.exec(find_all_articles) }
   @title = params["title"]
   @url = params["url"]
   @desc = params["desc"]
