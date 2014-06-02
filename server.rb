@@ -4,13 +4,15 @@ require 'pg'
 require 'net/http'
 require 'uri'
 
+######################## USER INPUT VALIDATIONS #############################
+
 def validate_no_blanks
   fields = [ params["title"], params["url"], params["desc"] ]
   !fields.any? {|field| field == "" || field == nil}
 end
 
 def validate_comment_not_blank
-  true if params["body"] != nil || params["body"] != ""
+  true if params["body"] != nil 
 end
 
 def validate_desc_length
@@ -18,18 +20,20 @@ def validate_desc_length
 end
 
 def validate_unique_url(articles)
-  false unless articles.each { |article| article["url"] != params["url"] }
+  articles.each { |article| article["url"] != params["url"] } ? true : false
 end
 
-def validate_good_url
-  if params["url"].start_with?("http://") || params["url"].start_with?("https://")
-    address = URI(params["url"])
-    response = Net::HTTP.get_response(address)
-    false unless response.code == 200
-  else
-    false
+def validate_good_url(url) 
+  begin
+      address = URI(url)
+      response = Net::HTTP.get_response(url)
+      true if response.code == "200"
+  rescue
+      url.start_with?("http://") || url.start_with?("https://")
   end
 end
+
+######################## SQL COMMANDS #############################
 
 def access_database
   begin
@@ -50,13 +54,11 @@ def sql_insert_into_comments
                    VALUES ( $1, $2, $3)"
 end
 
-def find_articles#(user_search)
-  # search ||= user_search
+def find_articles
   query = "SELECT
            title, url, description, id 
            FROM articles
            ORDER BY id"
-           # WHERE articles.title = #{search}
 end
 
 def find_comments
@@ -66,6 +68,8 @@ def find_comments
          WHERE articles.id = $1
          ORDER BY comments.posted_at"
 end
+
+######################## ROUTING & CONTROLLER LOGIC #############################
 
 get '/articles' do
   @articles = access_database{ |conn| conn.exec(find_articles) }
@@ -92,17 +96,30 @@ post '/submit' do
   @url = params["url"]
   @desc = params["desc"]
 
-  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles) && validate_good_url
+  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles) && validate_good_url(@url)
     access_database do |conn|
       conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
     end
     redirect '/articles'
   else
+    @error_message = ""
+      if !validate_no_blanks
+        @error_message = "No blank fields please."
+      elsif !validate_desc_length
+        @error_message = "Please enter a description of 20 or more characters."
+      elsif !validate_unique_url(@articles)
+        @error_message = "Sorry, that article has already been submitted!"
+      elsif !validate_good_url(@url)
+        @error_message = "Sorry, we didn't recognize that URL.  Make sure you begin with http:// or https://"
+      else
+        @error_message = ""
+      end
   end
   erb :'submit.html'
 end
 
 get '/articles/:id/comments' do
+  @articles = access_database{ |conn| conn.exec(find_articles) }
   @article_id = params[:id].to_i
   @comments = access_database do |conn|
     conn.exec_params(find_comments, [@article_id])
@@ -110,14 +127,16 @@ get '/articles/:id/comments' do
   erb :'comments.html'
 end
 
-post '/articles/:id/comments' do
+post '/articles/:id/comments' do  
   @article_id = params[:id]
   @comment_body = params[:body]
-  
   if validate_comment_not_blank
     access_database do |conn|
       conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
     end
+    redirect "/articles/#{@article_id}/comments"
+  else
+     @error_message = "Can't submit a blank form."
+     erb :'comments.html'
   end
-  redirect "/articles/#{@article_id}/comments"
 end

@@ -25,9 +25,15 @@
       </header>
 
       <div class="content">
+        <% @articles.each do |article| %>
+          <a href="<%= article["url"] %> "> <h2> <%= article["title"] if article["id"] == @article_id.to_s %> </h2> </a>
+        <% end %> 
+
         <% @comments.each do |comment| %>
           <p><%= comment["body"] %></p>
+          <p class ="time_posted"> <%= comment["posted_at"] %> </p>
         <% end %>
+        
         <form action="/articles/<%= @article_id %>/comments" method="post">
           
           <input type="text" name="body" id="body">
@@ -36,13 +42,14 @@
 
         </form>
         
-        <p id="error"><%= @error_message %></p>
+        <p id="error"> <%= @error_message %> </p>
       
       </div>
 
       <footer>
         <hr/>
         <nav>
+          
           <ul>
            <li> <a href=""> Lists </a> | </li>
            <li> <a href=""> RSS </a> | </li>
@@ -57,11 +64,12 @@
            <li> <a href=""> Apply </a> | </li>
            <li> <a href=""> Library </a> </li>
          </ul>
-         <form>
-           Search:
-           <input type="text field" name="search_input">
-           </form>
+         
+         <form action="/articles" method="post">
+           <input type="text" name="search">
+           <input type="submit" value="Search">
          </form>
+        
         </nav>
       </footer>
 

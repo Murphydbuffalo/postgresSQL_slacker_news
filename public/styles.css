@@ -55,6 +55,9 @@ a {text-decoration: none;
 
 .content li a:hover {text-decoration: underline;}
 
+.content ol ul li {margin-left: 5em;
+                   padding: .5em;}
+
 span {font-size: 65%;}
 
 hr {border: .15em solid #ff6600;}

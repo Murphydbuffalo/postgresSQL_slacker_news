@@ -29,7 +29,8 @@
           <% @articles.each do |article| %>
           <li> <span> &#x25b2; </span> <a href="<%= article["url"] %>" target="_blank"> <%= article["title"] %> </a>
             <ul>
-             <li> <%= article["description"] %> <a href="/articles/<%= article["id"] %>/comments"> Comments </a></li>
+             <li> <%= article["description"] %> </li>
+             <li> <a href="/articles/<%= article["id"] %>/comments"> Comments </a> </li>
             </ul>
           </li>
           <% end %>
@@ -57,11 +58,12 @@
            <li> <a href=""> Apply </a> | </li>
            <li> <a href=""> Library </a> </li>
          </ul>
-         <form>
-           Search:
-           <input type="text field" name="search_input">
-           </form>
+         
+         <form action="/articles" method="post">
+           <input type="text" name="search">
+           <input type="submit" value="Search">
          </form>
+        
         </nav>
       </footer>
 
