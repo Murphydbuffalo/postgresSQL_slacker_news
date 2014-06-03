@@ -57,9 +57,12 @@ end
 
 ######################## LOGIN VALIDATIONS #############################
 
-def valid_user?
-  #Does username exist?
-  #Does it match password on file?
+def valid_password?(users, username, password)
+  users.each do |user| 
+    if user["username"] == username
+      user["password"] == password 
+    end
+  end
 end
 
 
@@ -243,7 +246,16 @@ post '/login' do
   @username = params[:username]
   @password = params[:password]
 
-  redirect '/articles'
+  if !username_available?(@users, @username)
+    @error_message = "That username is not registered."
+    erb :login
+  elsif !valid_password?(@users, @username, @password)
+    @error_message = "Password and username don't match."
+    erb :login
+  else
+    # session[:user_id] ==
+    redirect '/articles'
+  end
 end
 
 
