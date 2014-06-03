@@ -52,6 +52,8 @@ li a:visited {color: grey;}
 
 .content a:hover {text-decoration: underline;}
 
+.content p {margin-left: 2em;}
+
 form {margin-left: 2.5%;}
 
 form textarea,

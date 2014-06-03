@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Slacker News</title>
     <link rel="shortcut icon" href="http://charles.io/images/yc.png">
-    <link rel="stylesheet" href="/comment_styles.css" type="text/css">
+    <link rel="stylesheet" href="styles.css" type="text/css">
   </head>
 
   <body>
@@ -19,37 +19,27 @@
            <li> <a href=""> ask </a> | </li>
            <li> <a href=""> jobs </a> | </li>
            <li> <a href="/submit"> submit </a> </li>
+           <li> <a class="login" href="login"> login | </a> <a class="login" href="/sign_up"> sign up </a> </li>
          </ul>
        </nav>
-       <a id="login" href=""> login </a>
       </header>
 
-      <div class="content">
+    <div class="content">
+      <ol>
         <% @articles.each do |article| %>
-          <a href="<%= article["url"] %> "> <h2> <%= article["title"] if article["id"] == @article_id.to_s %> </h2> </a>
-        <% end %> 
-
-        <% @comments.each do |comment| %>
-          <p><%= comment["body"] %></p>
-          <p class ="time_posted"> <%= comment["posted_at"] %> </p>
+        <li> <span> &#x25b2; </span> <a class="title" href="<%= article["url"] %>" target="_blank"> <%= article["title"] %> </a>
+          <ul>
+            <li> <%= article["description"] %> </li>
+            <li class="comments"> <a href="/articles/<%= article["id"] %>/comments"> Comments </a> </li>
+          </ul>
+        </li>
         <% end %>
-        
-        <form action="/articles/<%= @article_id %>/comments" method="post">
-          
-          <input type="text" name="body" id="body">
-
-          <input type="submit" value="Post Comment">
-
-        </form>
-        
-        <p id="error"> <%= @error_message %> </p>
-      
-      </div>
-
-      <footer>
+      </ol>
+    </div>
+     
+     <footer>
         <hr/>
         <nav>
-          
           <ul>
            <li> <a href=""> Lists </a> | </li>
            <li> <a href=""> RSS </a> | </li>
@@ -65,7 +55,7 @@
            <li> <a href=""> Library </a> </li>
          </ul>
          
-         <form action="/articles" method="post">
+         <form action="/articles" method="get">
            <input type="text" name="search">
            <input type="submit" value="Search">
          </form>
@@ -76,3 +66,6 @@
     </div>
   </body>
 </html>
+
+   
+

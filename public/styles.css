@@ -28,19 +28,14 @@ header img {height: 1.4em;
             margin: 0 0 .5em .15em;}
 
 header nav ul {position: relative;
-             right: 11%;}
+               right: 4%;}
 
 header li a:visited {color: black;}
 
+.login {left: 15em;}
+
 nav,
 nav li {display: inline-block;}
-
-ol li  {font-size: 90%;}
-
-ol ul li {font-size: 75%;
-          padding-bottom: .4em;
-          position: relative;
-          right: 5%;}
 
 ol li,
 ol ul li,
@@ -51,12 +46,13 @@ ul li {list-style-type: none;}
 a {text-decoration: none;
    color: black;}
 
-.content li a {font-size: 120%;}
-
 .content li a:hover {text-decoration: underline;}
 
-.content ol ul li {margin-left: 5em;
-                   padding: .5em;}
+.content ol ul {padding: .75em;}
+
+.title {font-size: 1.2em;}
+
+.comments {padding-top: .67em;}
 
 span {font-size: 65%;}
 

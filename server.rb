@@ -3,6 +3,9 @@ require 'sinatra'
 require 'pg'
 require 'net/http'
 require 'uri'
+# require 'securerandom'
+
+use Rack::Session::Cookie, secret: ENV['SECRET_TOKEN']
 
 ######################## USER INPUT VALIDATIONS #############################
 
@@ -24,14 +27,41 @@ def validate_unique_url(articles)
 end
 
 def validate_good_url(url) 
-  begin
-      address = URI(url)
-      response = Net::HTTP.get_response(url)
-      true if response.code == "200"
-  rescue
-      url.start_with?("http://") || url.start_with?("https://")
+  if url.start_with?("http://") || url.start_with?("https://")
+    begin
+        address = URI(url)
+        response = Net::HTTP.get_response(address)
+        true if response.code == "200"
+    rescue
+        false
+    end
+  else
+    false
   end
 end
+
+######################## SIGN UP VALIDATIONS #############################
+
+def username_available?(users, username_desired)
+  !users.any? { |user| user["username"] == username_desired }
+end
+
+def password_ok?(password_desired)
+  password_desired.length > 9
+  #Does it include a number and letter?
+end
+
+def password_match?(password_desired, confirmation)
+  password_desired == confirmation
+end
+
+######################## LOGIN VALIDATIONS #############################
+
+def valid_user?
+  #Does username exist?
+  #Does it match password on file?
+end
+
 
 ######################## SQL COMMANDS #############################
 
@@ -44,7 +74,7 @@ def access_database
   end
 end
 
-def sql_insert_into_article
+def sql_insert_into_articles
   sql_statement = "INSERT INTO articles (title, url, description, posted_at)
                    VALUES ( $1, $2, $3, $4)"
 end
@@ -52,6 +82,11 @@ end
 def sql_insert_into_comments
   sql_statement = "INSERT INTO comments (body, posted_at, article_id)
                    VALUES ( $1, $2, $3)"
+end
+
+def sql_insert_into_users
+  sql_statement = "INSERT INTO users (username, password)
+                   VALUES ($1, $2)"
 end
 
 def find_articles
@@ -77,12 +112,22 @@ def find_comments
          ORDER BY comments.posted_at"
 end
 
+def find_users
+  query = "SELECT users.username, users.password, articles.user_id, comments.user_id 
+           FROM users
+           JOIN articles ON articles.user_id = users.id
+           JOIN comments ON comments.user_id = users.id"
+end
+
 ######################## ROUTING & CONTROLLER LOGIC #############################
 
 get '/articles' do
   search ||= params[:search]
-  @articles = access_database{ |conn| conn.exec_params(find_articles, ["%#{search}%"]) }
-  erb :'index.html'
+  @articles = access_database do|conn| 
+    conn.exec_params(find_articles, ["%#{search}%"]) 
+  end
+
+  erb :index
 end
 
 
@@ -91,23 +136,29 @@ get '/' do
 end
 
 get '/submit' do
-  @articles = access_database{ |conn| conn.exec(find_all_articles) }
+  @articles = access_database do |conn| 
+    conn.exec(find_all_articles) 
+  end
+
   @title = params["title"]
   @url = params["url"]
   @desc = params["desc"]
 
-  erb :'submit.html'
+  erb :submit
 end
 
 post '/submit' do
-  @articles = access_database{ |conn| conn.exec(find_all_articles) }
+  @articles = access_database do |conn| 
+    conn.exec(find_all_articles) 
+  end
+
   @title = params["title"]
   @url = params["url"]
   @desc = params["desc"]
 
   if validate_no_blanks && validate_desc_length && validate_unique_url(@articles) && validate_good_url(@url)
     access_database do |conn|
-      conn.exec_params(sql_insert_into_article, [ params["title"], params["url"], params["desc"], Time.now ] )
+      conn.exec_params(sql_insert_into_articles, [ params["title"], params["url"], params["desc"], Time.now ] )
     end
     redirect '/articles'
   else
@@ -124,21 +175,27 @@ post '/submit' do
         @error_message = ""
       end
   end
-  erb :'submit.html'
+  erb :submit
 end
 
 get '/articles/:id/comments' do
-  @articles = access_database{ |conn| conn.exec(find_articles) }
+  @articles = access_database do |conn| 
+    conn.exec(find_all_articles) 
+  end
+
   @article_id = params[:id].to_i
+
   @comments = access_database do |conn|
     conn.exec_params(find_comments, [@article_id])
   end
-  erb :'comments.html'
+
+  erb :comments
 end
 
 post '/articles/:id/comments' do  
   @article_id = params[:id]
   @comment_body = params[:body]
+
   if validate_comment_not_blank
     access_database do |conn|
       conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
@@ -146,6 +203,47 @@ post '/articles/:id/comments' do
     redirect "/articles/#{@article_id}/comments"
   else
      @error_message = "Can't submit a blank form."
-     erb :'comments.html'
+     erb :comments
   end
 end
+
+get '/sign_up' do
+  erb :sign_up
+end
+
+post '/sign_up' do
+  @users = access_database {|conn| conn.exec(find_users) }
+  @username = params[:username]
+  @password = params[:password]
+  @confirmation = params[:confirmation]
+
+  if !username_available?(@users, @username)
+    @error_message = "Sorry, that username is already taken!"
+    erb :sign_up
+  elsif !password_ok?(@password)
+    @error_message = "Please enter a password of at least 10 characters, including one letter and one number."
+    erb :sign_up
+  elsif !password_match?(@password, @confirmation)
+    @error_message = "Oops, those passwords don't match."
+    erb :sign_up
+  else
+    access_database do |conn|
+      conn.exec_params(sql_insert_into_users, [@username, @password])
+    end
+    redirect '/articles'
+  end
+end
+
+get '/login' do
+  erb :login
+end
+
+post '/login' do
+  @users = access_database {|conn| conn.exec(find_users) }
+  @username = params[:username]
+  @password = params[:password]
+
+  redirect '/articles'
+end
+
+
