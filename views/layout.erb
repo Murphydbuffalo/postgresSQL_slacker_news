@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Slacker News</title>
+    <link rel="shortcut icon" href="http://charles.io/images/yc.png">
+    <link rel="stylesheet" href="/styles.css" type="text/css">
+  </head>
+
+  <body>
+    <div class='whole_page'>
+      <header>
+        <img src="http://vladizorov.info/static/images/favicons/ycombinator.ico" id="logo" />
+       <a href="/articles"> <h4> Slacker News </h4> </a>
+       <nav>
+         <ul>
+           <li> <a href=""> new </a> | </li>
+           <li> <a href=""> comments </a> | </li>
+           <li> <a href=""> ask </a> | </li>
+           <li> <a href=""> jobs </a> | </li>
+           <li> <a href="/submit"> submit </a> </li>
+           <li> <a class="login" href="login"> login | </a> <a class="login" href="/sign_up"> sign up </a> </li>
+         </ul>
+       </nav>
+      </header>
+
+  <%= yield %>
+
+      <footer>
+        <hr/>
+        <nav>
+          <ul>
+           <li> <a href=""> Lists </a> | </li>
+           <li> <a href=""> RSS </a> | </li>
+           <li> <a href=""> Bookmarklet </a> | </li>
+           <li> <a href=""> Guidelines </a> | </li>
+           <li> <a href=""> FAQ </a> | </li>
+           <li> <a href=""> DMCA </a> | </li>
+           <li> <a href=""> News News </a> | </li>
+           <li> <a href=""> Feature Requests </a> | </li>
+           <li> <a href=""> Bugs </a> | </li>
+           <li> <a href=""> Y Combinator </a> | </li>
+           <li> <a href=""> Apply </a> | </li>
+           <li> <a href=""> Library </a> </li>
+         </ul>
+         
+         <form action="/articles" method="get">
+           <input type="text" name="search">
+           <input type="submit" value="Search">
+         </form>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
