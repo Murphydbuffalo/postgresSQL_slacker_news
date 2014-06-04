@@ -73,9 +73,28 @@ end
 
 ######################## SQL QUERIES #############################
 
+def production_database_config
+  db_url_parts = ENV['DATABASE_URL'].split(/\/|:|@/)
+
+  {
+    user: db_url_parts[3],
+    password: db_url_parts[4],
+    host: db_url_parts[5],
+    dbname: db_url_parts[7]
+  }
+end
+
+configure :development do
+  set :database_config, { dbname: 'slacker_news' }
+end
+
+configure :production do
+  set :database_config, production_database_config
+end
+
 def access_database
   begin
-    connection = PG.connect(dbname: "slacker_news")
+    connection = PG.connect(settings.database_config)
     yield(connection)
   ensure
     connection.close
