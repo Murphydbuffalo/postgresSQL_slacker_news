@@ -45,8 +45,11 @@ def username_available?(users, username_desired)
 end
 
 def password_ok?(password_desired)
-  password_desired.length > 9
-  #Does it include a number and letter? REGEXP
+  if password_desired.length > 9
+    password_desired.split("").any? {|char| char.match(/\d/)} 
+  else
+    false
+  end
 end
 
 def password_match?(password_desired, confirmation)
