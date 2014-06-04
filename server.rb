@@ -3,7 +3,6 @@ require 'sinatra'
 require 'pg'
 require 'net/http'
 require 'uri'
-# require 'securerandom'
 
 use Rack::Session::Cookie, secret: ENV['SECRET_TOKEN']
 
@@ -15,7 +14,7 @@ def validate_no_blanks
 end
 
 def validate_comment_not_blank
-  true if params["body"] != nil 
+  params["body"] != nil 
 end
 
 def validate_desc_length
@@ -31,7 +30,7 @@ def validate_good_url(url)
     begin
         address = URI(url)
         response = Net::HTTP.get_response(address)
-        true if response.code == "200"
+        response.code == "200"
     rescue
         false
     end
@@ -43,7 +42,7 @@ end
 ######################## SIGN UP VALIDATIONS #############################
 
 def username_available?(users, username_desired)
-  !users.any? { |user| user["username"] == username_desired }
+  users.none? { |user| user["username"] == username_desired }
 end
 
 def password_ok?(password_desired)
@@ -65,6 +64,10 @@ def valid_password?(users, username, password)
   end
 end
 
+def logged_in?
+  session[:user_id] != nil
+end
+
 
 ######################## SQL COMMANDS #############################
 
@@ -78,13 +81,13 @@ def access_database
 end
 
 def sql_insert_into_articles
-  sql_statement = "INSERT INTO articles (title, url, description, posted_at)
-                   VALUES ( $1, $2, $3, $4)"
+  sql_statement = "INSERT INTO articles (title, url, description, posted_at, user_id)
+                   VALUES ($1, $2, $3, $4, $5)"
 end
 
 def sql_insert_into_comments
-  sql_statement = "INSERT INTO comments (body, posted_at, article_id)
-                   VALUES ( $1, $2, $3)"
+  sql_statement = "INSERT INTO comments (body, posted_at, article_id, user_id)
+                   VALUES ($1, $2, $3, $4)"
 end
 
 def sql_insert_into_users
@@ -115,11 +118,14 @@ def find_comments
          ORDER BY comments.posted_at"
 end
 
-def find_users
-  query = "SELECT users.username, users.password, articles.user_id, comments.user_id 
-           FROM users
-           JOIN articles ON articles.user_id = users.id
-           JOIN comments ON comments.user_id = users.id"
+def find_all_users
+  query = "SELECT users.username, users.password, users.id 
+           FROM users"
+end
+
+def find_user
+  query = "SELECT users.username, users.password FROM users
+           WHERE users.id = #{session[:user_id]}"
 end
 
 ######################## ROUTING & CONTROLLER LOGIC #############################
@@ -129,7 +135,6 @@ get '/articles' do
   @articles = access_database do|conn| 
     conn.exec_params(find_articles, ["%#{search}%"]) 
   end
-
   erb :index
 end
 
@@ -139,6 +144,8 @@ get '/' do
 end
 
 get '/submit' do
+  redirect '/login' if !logged_in?
+  
   @articles = access_database do |conn| 
     conn.exec(find_all_articles) 
   end
@@ -146,7 +153,7 @@ get '/submit' do
   @title = params["title"]
   @url = params["url"]
   @desc = params["desc"]
-
+  
   erb :submit
 end
 
@@ -159,26 +166,25 @@ post '/submit' do
   @url = params["url"]
   @desc = params["desc"]
 
-  if validate_no_blanks && validate_desc_length && validate_unique_url(@articles) && validate_good_url(@url)
+  if !validate_no_blanks
+    @error_message = "No blank fields please."
+    erb :submit
+  elsif !validate_desc_length
+    @error_message = "Please enter a description of 20 or more characters."
+    erb :submit
+  elsif !validate_unique_url(@articles)
+    @error_message = "Sorry, that article has already been submitted!"
+    erb :submit
+  elsif !validate_good_url(@url)
+    @error_message = "Sorry, we didn't recognize that URL.  Make sure you begin with http:// or https://"
+    erb :submit
+  else
     access_database do |conn|
-      conn.exec_params(sql_insert_into_articles, [ params["title"], params["url"], params["desc"], Time.now ] )
+      conn.exec_params(sql_insert_into_articles, [ params["title"], params["url"], params["desc"], Time.now, session[:user_id] ])
     end
     redirect '/articles'
-  else
-    @error_message = ""
-      if !validate_no_blanks
-        @error_message = "No blank fields please."
-      elsif !validate_desc_length
-        @error_message = "Please enter a description of 20 or more characters."
-      elsif !validate_unique_url(@articles)
-        @error_message = "Sorry, that article has already been submitted!"
-      elsif !validate_good_url(@url)
-        @error_message = "Sorry, we didn't recognize that URL.  Make sure you begin with http:// or https://"
-      else
-        @error_message = ""
-      end
   end
-  erb :submit
+ 
 end
 
 get '/articles/:id/comments' do
@@ -198,15 +204,24 @@ end
 post '/articles/:id/comments' do  
   @article_id = params[:id]
   @comment_body = params[:body]
+  @articles = access_database do |conn| 
+    conn.exec(find_all_articles) 
+  end
+  @comments = access_database do |conn|
+    conn.exec_params(find_comments, [@article_id])
+  end
 
-  if validate_comment_not_blank
+  if !logged_in?
+    @error_message = "Please log in to post comments."
+    erb :comments
+  elsif !validate_comment_not_blank
+    @error_message = "Can't submit a blank form."
+    erb :comments
+  else
     access_database do |conn|
-      conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id])
+      conn.exec_params(sql_insert_into_comments, [@comment_body, Time.now, @article_id, session[:user_id] ])
     end
     redirect "/articles/#{@article_id}/comments"
-  else
-     @error_message = "Can't submit a blank form."
-     erb :comments
   end
 end
 
@@ -215,7 +230,7 @@ get '/sign_up' do
 end
 
 post '/sign_up' do
-  @users = access_database {|conn| conn.exec(find_users) }
+  @users = access_database {|conn| conn.exec(find_all_users) }
   @username = params[:username]
   @password = params[:password]
   @confirmation = params[:confirmation]
@@ -242,18 +257,22 @@ get '/login' do
 end
 
 post '/login' do
-  @users = access_database {|conn| conn.exec(find_users) }
+  @users = access_database {|conn| conn.exec(find_all_users) }
   @username = params[:username]
   @password = params[:password]
 
-  if !username_available?(@users, @username)
+  if username_available?(@users, @username)
     @error_message = "That username is not registered."
     erb :login
   elsif !valid_password?(@users, @username, @password)
     @error_message = "Password and username don't match."
     erb :login
   else
-    # session[:user_id] ==
+    @users.each do |user|
+      if user["username"] == @username
+        session[:user_id] = user["id"].to_i 
+      end
+    end
     redirect '/articles'
   end
 end
