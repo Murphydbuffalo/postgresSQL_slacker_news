@@ -4,6 +4,5 @@ ruby '2.0.0'
 
 gem 'sinatra'
 gem 'pg'
-gem 'shotgun'
-gem 'pry'
+
 

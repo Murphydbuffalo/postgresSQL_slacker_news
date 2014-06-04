@@ -49,7 +49,10 @@ a {text-decoration: none;
 .content ol ul {padding: .75em;}
 
 .form,
-.comment_content {margin-left: 1em;}
+.submit,
+.comment_content {margin-left: 1.5em;}
+
+.submit {margin-top: 1em;}
 
 .title {font-size: 1.2em;}
 
