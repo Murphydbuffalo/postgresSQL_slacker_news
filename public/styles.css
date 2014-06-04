@@ -8,8 +8,6 @@ header {background-color: #ff6600;
         height: 1.80em;
         position: relative;}
 
-#login {margin-left: 40%;}
-
 header nav,
 header a {position: relative;
           bottom: 40%;}
@@ -32,7 +30,7 @@ header nav ul {position: relative;
 
 header li a:visited {color: black;}
 
-.login {left: 15em;}
+.login {left: 18em;}
 
 nav,
 nav li {display: inline-block;}
@@ -50,9 +48,15 @@ a {text-decoration: none;
 
 .content ol ul {padding: .75em;}
 
+.form,
+.comment_content {margin-left: 1em;}
+
 .title {font-size: 1.2em;}
 
 .comments {padding-top: .67em;}
+
+footer nav li,
+.time_posted {font-size: .8em;}
 
 span {font-size: 65%;}
 
@@ -63,4 +67,3 @@ footer {text-align: center;}
 footer form {color: grey;
              font-size: 1.1em;}
 
-footer nav li {font-size: 80%;}

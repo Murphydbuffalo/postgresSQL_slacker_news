@@ -1,7 +1,8 @@
 <div class="content">
   <ol>
     <% @articles.each do |article| %>
-    <li> <span> &#x25b2; </span> <a class="title" href="<%= article["url"] %>" target="_blank"> <%= article["title"] %> </a>
+    <li> <span> &#x25b2; </span> <a class="title" href="<%= article["url"] %>" target="_blank"> <%= article["title"] %> </a> 
+    <span> <%= " posted by #{article["username"]}" %> </span> 
       <ul>
         <li> <%= article["description"] %> </li>
         <li class="comments"> <a href="/articles/<%= article["id"] %>/comments"> Comments </a> </li>

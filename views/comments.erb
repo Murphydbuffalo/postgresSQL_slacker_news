@@ -1,14 +1,17 @@
 <div class="content">
-  <% @articles.each do |article| %>
-    <a href="<%= article["url"] %> "> <h3> <%= article["title"] if article["id"] == @article_id.to_s %> </h3> </a>
-  <% end %>
+  <div class="comment_content">  
+    <% @articles.each do |article| %>
+      <a href="<%= article["url"] %> "> <h3> <%= article["title"] if article["id"] == @article_id.to_s %> </h3> </a>
+    <% end %>
 
-  <% @comments.each do |comment| %>
-    <p> <%= comment["body"] %> </p>
-    <p class ="time_posted"> <%= comment["posted_at"] %> </p>
-  <% end %>
+    <% @comments.each do |comment| %>
+      <p> <%= comment["body"] %> </p>
+      <p class="time_posted"> <%= comment["posted_at"] %> </p>
+      <p class="time_posted"> <%= "by #{comment["username"]}" %> </p>
+    <% end %>
+  </div>
 
-  <form action="/articles/<%= @article_id %>/comments" method="post">   
+  <form class="form" action="/articles/<%= @article_id %>/comments" method="post">   
     <input type="text" name="body" id="body">
     <input type="submit" value="Post Comment">
   </form>

@@ -1,4 +1,3 @@
-require 'pry'
 require 'sinatra'
 require 'pg'
 require 'net/http'
@@ -47,7 +46,7 @@ end
 
 def password_ok?(password_desired)
   password_desired.length > 9
-  #Does it include a number and letter?
+  #Does it include a number and letter? REGEXP
 end
 
 def password_match?(password_desired, confirmation)
@@ -69,7 +68,7 @@ def logged_in?
 end
 
 
-######################## SQL COMMANDS #############################
+######################## SQL QUERIES #############################
 
 def access_database
   begin
@@ -80,42 +79,31 @@ def access_database
   end
 end
 
-def sql_insert_into_articles
-  sql_statement = "INSERT INTO articles (title, url, description, posted_at, user_id)
-                   VALUES ($1, $2, $3, $4, $5)"
-end
-
-def sql_insert_into_comments
-  sql_statement = "INSERT INTO comments (body, posted_at, article_id, user_id)
-                   VALUES ($1, $2, $3, $4)"
-end
-
-def sql_insert_into_users
-  sql_statement = "INSERT INTO users (username, password)
-                   VALUES ($1, $2)"
-end
-
-def find_articles
+def search_articles
   query = "SELECT
-           title, url, description, id 
+           articles.title, articles.url, articles.description, 
+           articles.id, users.username  
            FROM articles
+           JOIN users ON articles.user_id = users.id
            WHERE title ILIKE $1 OR description ILIKE $1
-           ORDER BY id"
+           ORDER BY articles.id"
 end
 
 def find_all_articles
   query = "SELECT
-           title, url, description, id 
+           title, url, description, id
            FROM articles
            ORDER BY id"
 end
 
 def find_comments
-  sql = "SELECT comments.body, comments.posted_at, comments.article_id
-         FROM comments
-         JOIN articles ON articles.id = comments.article_id
-         WHERE articles.id = $1
-         ORDER BY comments.posted_at"
+  query = "SELECT comments.body, comments.posted_at, 
+           comments.article_id, users.username
+           FROM comments
+           JOIN users ON users.id = comments.user_id
+           JOIN articles ON articles.id = comments.article_id
+           WHERE articles.id = $1
+           ORDER BY comments.posted_at"
 end
 
 def find_all_users
@@ -123,17 +111,29 @@ def find_all_users
            FROM users"
 end
 
-def find_user
-  query = "SELECT users.username, users.password FROM users
-           WHERE users.id = #{session[:user_id]}"
+######################## SQL INSERT STATEMENTS #############################
+
+def sql_insert_into_articles
+  query = "INSERT INTO articles (title, url, description, posted_at, user_id)
+           VALUES ($1, $2, $3, $4, $5)"
 end
 
-######################## ROUTING & CONTROLLER LOGIC #############################
+def sql_insert_into_comments
+  query = "INSERT INTO comments (body, posted_at, article_id, user_id)
+           VALUES ($1, $2, $3, $4)"
+end
+
+def sql_insert_into_users
+  query = "INSERT INTO users (username, password)
+           VALUES ($1, $2)"
+end
+
+######################## INDEX PAGE (ALL ARTICLES) ROUTES #############################
 
 get '/articles' do
   search ||= params[:search]
   @articles = access_database do|conn| 
-    conn.exec_params(find_articles, ["%#{search}%"]) 
+    conn.exec_params(search_articles, ["%#{search}%"]) 
   end
   erb :index
 end
@@ -187,6 +187,8 @@ post '/submit' do
  
 end
 
+######################## COMMENTS ROUTES #############################
+
 get '/articles/:id/comments' do
   @articles = access_database do |conn| 
     conn.exec(find_all_articles) 
@@ -224,6 +226,8 @@ post '/articles/:id/comments' do
     redirect "/articles/#{@article_id}/comments"
   end
 end
+
+######################## SIGN UP & LOG IN ROUTES #############################
 
 get '/sign_up' do
   erb :sign_up
