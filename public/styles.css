@@ -35,8 +35,6 @@ header li a:visited {color: black;}
 nav,
 nav li {display: inline-block;}
 
-ol li,
-ol ul li,
 li a:visited {color: grey;}
 
 ul li {list-style-type: none;}
